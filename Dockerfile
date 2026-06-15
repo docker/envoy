@@ -1,5 +1,5 @@
 # STAGE: build
-FROM envoyproxy/envoy-build-ubuntu:f4a881a1205e8e6db1a57162faf3df7aed88eae8@sha256:b10346fe2eee41733dbab0e02322c47a538bf3938d093a5daebad9699860b814 AS build
+FROM envoyproxy/envoy-build-ubuntu:86873047235e9b8232df989a5999b9bebf9db69c@sha256:1b3c82ca34c505c4951918b2e0a0c3db88cf266ebbf4196e4b0fba8fa137ada3 AS build
 WORKDIR /source
 # COPY /home/cybercyst/.cache/envoy-bazel /root/.cache/envoy-bazel
 COPY . .
