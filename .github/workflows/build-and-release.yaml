@@ -12,52 +12,26 @@ permissions:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           fetch-depth: 0
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
-        with:
-          # Stopgap: DOCKERBUILDBOT_READ_PAT is not yet shared with docker/envoy.
-          # dockerpublicbot's read PAT is already available as an org secret here.
-          # Revert to dockerbuildbot once the org secret access is granted.
-          username: dockerpublicbot
-          password: ${{ secrets.DOCKERPUBLICBOT_READ_PAT }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-        with:
-          driver: cloud
-          endpoint: docker/platform-experience
-          install: true
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # v5.1.0
-        with:
-          role-to-assume: "arn:aws:iam::710015040892:role/CicdEnvoy-20251021161123163100000002"
-          role-session-name: EnvoyCI
-          aws-region: us-east-1
-
-      - name: Login to ECR
+      - name: Compute image version
+        id: version
         run: |
-          aws ecr get-login-password | docker login --username AWS --password-stdin 710015040892.dkr.ecr.us-east-1.amazonaws.com
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "version=1.38.2-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Get Current Git SHA
-        id: git_sha
-        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-      - name: Build and Push Docker Image
-        id: docker-build
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+      - name: Build and push to ECR
+        uses: docker/actions/build-push-image-ecr@b23a287c41a8de3106eaf4ed333465a62dc1a9f7 # main
         with:
-          context: .
+          image_name: envoy
+          image_version: ${{ steps.version.outputs.version }}
+          target: envoy-distroless
           platforms: linux/amd64
-          # push: true
-          build-args: |
-            VERSION=${{ steps.git_sha.outputs.sha }}
-          tags: |
-            710015040892.dkr.ecr.us-east-1.amazonaws.com/infra-routing/envoy:${{ steps.git_sha.outputs.sha }}
-
+          build_args: |
+            VERSION=${{ steps.version.outputs.sha }}
+          docker_username: dockerpublicbot
+          docker_password: ${{ secrets.DOCKERPUBLICBOT_READ_PAT }}
