@@ -18,18 +18,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get Current Git SHA
-        id: git_sha
-        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Compute image version
+        id: version
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "version=1.38.2-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Build and push to ECR
         uses: docker/actions/build-push-image-ecr@b23a287c41a8de3106eaf4ed333465a62dc1a9f7 # main
         with:
           image_name: envoy
-          image_version: ${{ steps.git_sha.outputs.sha }}
+          image_version: ${{ steps.version.outputs.version }}
           target: envoy-distroless
           platforms: linux/amd64
           build_args: |
-            VERSION=${{ steps.git_sha.outputs.sha }}
+            VERSION=${{ steps.version.outputs.sha }}
           docker_username: dockerpublicbot
           docker_password: ${{ secrets.DOCKERPUBLICBOT_READ_PAT }}
