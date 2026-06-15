@@ -20,8 +20,11 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
-          username: dockerbuildbot
-          password: ${{ secrets.DOCKERBUILDBOT_READ_PAT }}
+          # Stopgap: DOCKERBUILDBOT_READ_PAT is not yet shared with docker/envoy.
+          # dockerpublicbot's read PAT is already available as an org secret here.
+          # Revert to dockerbuildbot once the org secret access is granted.
+          username: dockerpublicbot
+          password: ${{ secrets.DOCKERPUBLICBOT_READ_PAT }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
